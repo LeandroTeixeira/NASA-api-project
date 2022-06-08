@@ -11,7 +11,7 @@ const results = [];
 
 async function loadPlanetsData() {
   return new Promise((resolve, reject) => {
-    const stream = fs.createReadStream(path.join(__dirname, '..', 'src', 'data', 'kepler_data.csv'));
+    const stream = fs.createReadStream(path.join(__dirname, '..', 'data', 'kepler_data.csv'));
 
     function isHabitablePlanet({ koi_disposition, koi_insol, koi_prad }) {
       return koi_disposition === 'CONFIRMED'
