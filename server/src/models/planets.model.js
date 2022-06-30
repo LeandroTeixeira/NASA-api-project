@@ -32,13 +32,16 @@ async function loadPlanetsData() {
     });
 
     parser.on('end', () => {
-      console.log(results.map(({ kepler_name }) => kepler_name));
-      console.log(`File End. ${results.length} results found.`);
       resolve();
     });
   });
 }
+
+function getAllPlanets() {
+  return results;
+}
+
 module.exports = {
   loadPlanetsData,
-  planets: results,
+  getAllPlanets,
 };
