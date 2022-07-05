@@ -16,9 +16,9 @@ function validatePost(req, res, next) {
     mission,
     rocket,
     launchDate,
-    destination,
+    target,
   } = req.body;
-  if (!mission || !rocket || !launchDate || !destination) {
+  if (!mission || !rocket || !launchDate || !target) {
     return res.status(400).json({ error: 'Missing required data.' });
   }
   const date = new Date(launchDate);
