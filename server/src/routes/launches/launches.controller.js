@@ -36,9 +36,8 @@ function validatePost(req, res, next) {
 
 function httpAbortLaunch(req, res) {
   const launchId = Number(req.params.id);
-  console.log(launchId);
   if (!getLaunchById(launchId)) {
-    return res.status(404).json({ error: 'Launch not found' });
+    return res.status(404).json({ error: 'Launch not found.' });
   }
   const aborted = abortLaunch(launchId);
   return res.status(200).json(aborted);
