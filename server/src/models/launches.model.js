@@ -19,6 +19,17 @@ function getAllLaunches() {
   return Array.from(launches.values());
 }
 
+function getLaunchById(id) {
+  return launches.get(id);
+}
+
+function abortLaunch(id) {
+  const aborted = launches.get(id);
+  aborted.upcoming = false;
+  aborted.success = false;
+  return aborted;
+}
+
 function addNewLaunch({
   mission, rocket, launchDate, target,
 }) {
@@ -40,4 +51,6 @@ function addNewLaunch({
   return newLaunch;
 }
 
-module.exports = { getAllLaunches, addNewLaunch };
+module.exports = {
+  abortLaunch, getAllLaunches, addNewLaunch, getLaunchById,
+};
