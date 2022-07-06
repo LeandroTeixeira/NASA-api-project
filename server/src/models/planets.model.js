@@ -3,11 +3,26 @@ const { parse } = require('csv-parse');
 const fs = require('fs');
 const path = require('path');
 
+const planets = require('./planets.mongo');
+
 const parser = parse({
   comment: '#',
   columns: true,
 });
-const results = [];
+
+async function savePlanet(planet) {
+  try {
+    await planets.updateOne({
+      keplerName: planet.kepler_name,
+    }, {
+      keplerName: planet.kepler_name,
+    }, {
+      upsert: true,
+    });
+  } catch (err) {
+    console.error(`Error saving planet to mongoDB: ${err}`);
+  }
+}
 
 async function loadPlanetsData() {
   return new Promise((resolve, reject) => {
@@ -21,9 +36,9 @@ async function loadPlanetsData() {
 
     stream.pipe(parser);
 
-    parser.on('data', (data) => {
+    parser.on('data', async (data) => {
       if (isHabitablePlanet(data)) {
-        results.push(data);
+        await savePlanet(data);
       }
     });
     parser.on('error', (error) => {
@@ -37,8 +52,9 @@ async function loadPlanetsData() {
   });
 }
 
-function getAllPlanets() {
-  return results;
+async function getAllPlanets() {
+  const response = await planets.find({ });
+  return response;
 }
 
 module.exports = {
