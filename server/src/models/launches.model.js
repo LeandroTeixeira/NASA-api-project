@@ -1,28 +1,25 @@
-// const launches = require('./launches.mongo');
-
-const launches = new Map();
-
-let latestFlightNumber = 100;
-
-const launch = {
-  flightNumber: latestFlightNumber,
-  mission: 'Kepler Exploration x',
-  rocket: 'Explorer IS1',
-  launchDate: new Date('December 27, 2030'),
-  target: 'Kepler-442 b',
-  customers: ['NASA', 'ZTM'],
-  upcoming: true,
-  success: true,
-};
-
-launches.set(launch.flightNumber, launch);
-
-function getAllLaunches() {
-  return Array.from(launches.values());
+const launches = require('./launches.mongo');
+const planets = require('./planets.mongo');
+// const launches = new Map();
+async function getAllLaunches() {
+  const launchList = await launches.find({}, '-_id -__v');
+  return launchList;
 }
 
-function getLaunchById(id) {
-  return launches.get(id);
+async function getLaunch(key, value) {
+  const launch = await launches.find({ [key]: value }, '-_id -__v');
+  return launch;
+}
+async function saveLaunch(newLaunch) {
+  const planet = await planets.findOne({ keplerName: newLaunch.target });
+  if (!planet) throw new Error('Planet not found');
+  await launches.updateOne(
+    { flightNumber: newLaunch.flightNumber },
+    newLaunch,
+    { upsert: true },
+  );
+  const addedLaunch = await getLaunch('flightNumber', newLaunch.flightNumber);
+  return addedLaunch;
 }
 
 function abortLaunch(id) {
@@ -32,7 +29,9 @@ function abortLaunch(id) {
   return aborted;
 }
 
-function addNewLaunch({
+let latestFlightNumber = 100;
+
+async function addNewLaunch({
   mission, rocket, launchDate, target,
 }) {
   ++latestFlightNumber;
@@ -46,13 +45,23 @@ function addNewLaunch({
     upcoming: true,
     success: true,
   };
-  launches.set(
-    latestFlightNumber,
-    newLaunch,
-  );
-  return newLaunch;
+  const addedLaunch = await saveLaunch(newLaunch);
+  return addedLaunch;
 }
 
+const firstLaunch = {
+  flightNumber: latestFlightNumber,
+  mission: 'Kepler Exploration x',
+  rocket: 'Explorer IS1',
+  launchDate: new Date('December 27, 2030'),
+  target: 'Kepler-442 b',
+  customers: ['NASA', 'ZTM'],
+  upcoming: true,
+  success: true,
+};
+
+saveLaunch(firstLaunch);
+
 module.exports = {
-  abortLaunch, getAllLaunches, addNewLaunch, getLaunchById,
+  abortLaunch, getAllLaunches, addNewLaunch, getLaunch,
 };

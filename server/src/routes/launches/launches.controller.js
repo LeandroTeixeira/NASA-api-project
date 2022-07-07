@@ -2,14 +2,19 @@ const {
   getAllLaunches, addNewLaunch, getLaunchById, abortLaunch,
 } = require('../../models/launches.model');
 
-function httpGetAllLaunches(_, res) {
-  return res.status(200).json(getAllLaunches());
+async function httpGetAllLaunches(_, res) {
+  const launches = await getAllLaunches();
+  return res.status(200).json(launches);
 }
-function httpAddNewLaunch(req, res) {
+async function httpAddNewLaunch(req, res) {
   const launch = req.body;
   launch.launchDate = new Date(launch.launchDate);
-  const addedLaunch = addNewLaunch(launch);
-  return res.status(201).json(addedLaunch);
+  try {
+    const addedLaunch = await addNewLaunch(launch);
+    return res.status(201).json(addedLaunch);
+  } catch (err) {
+    return res.status(404).json({ error: err.message });
+  }
 }
 
 // eslint-disable-next-line consistent-return
