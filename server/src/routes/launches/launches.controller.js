@@ -1,5 +1,5 @@
 const {
-  getAllLaunches, addNewLaunch, getLaunchById, abortLaunch,
+  getAllLaunches, scheduleNewLaunch, getLaunch, abortLaunch,
 } = require('../../models/launches.model');
 
 async function httpGetAllLaunches(_, res) {
@@ -10,7 +10,7 @@ async function httpAddNewLaunch(req, res) {
   const launch = req.body;
   launch.launchDate = new Date(launch.launchDate);
   try {
-    const addedLaunch = await addNewLaunch(launch);
+    const addedLaunch = await scheduleNewLaunch(launch);
     return res.status(201).json(addedLaunch);
   } catch (err) {
     return res.status(404).json({ error: err.message });
@@ -39,12 +39,13 @@ function validatePost(req, res, next) {
   next();
 }
 
-function httpAbortLaunch(req, res) {
+async function httpAbortLaunch(req, res) {
   const launchId = Number(req.params.id);
-  if (!getLaunchById(launchId)) {
+  const launch = await getLaunch('flightNumber', launchId);
+  if (!launch) {
     return res.status(404).json({ error: 'Launch not found.' });
   }
-  const aborted = abortLaunch(launchId);
+  const aborted = await abortLaunch(launchId);
   return res.status(200).json(aborted);
 }
 
