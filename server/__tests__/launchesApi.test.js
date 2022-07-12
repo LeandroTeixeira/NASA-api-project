@@ -1,8 +1,10 @@
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable no-undef */
 const request = require('supertest');
+const sinon = require('sinon');
 const { app, CURRENT_VERSION } = require('../src/app');
 const { mongoConnect, mongoDisconnect } = require('../src/services/mongo');
+const launches = require('../src/models/launches.mongo');
 
 describe('Launches API', () => {
   beforeAll(async () => {
@@ -12,6 +14,10 @@ describe('Launches API', () => {
   afterAll(async () => {
     await mongoDisconnect();
   });
+  afterEach(() => {
+    sinon.restore();
+  });
+
   describe('Test GET /current', () => {
     test('It should get the right version', async () => {
       await request(app)
@@ -33,8 +39,8 @@ describe('Launches API', () => {
 
   describe('Test POST /launch', () => {
     const completeLaunchData = {
-      mission: 'Test Mission',
-      rocket: 'Test Rocket',
+      mission: 'Test Mission 2',
+      rocket: 'Test Rocket 2',
       target: 'Kepler-1652 b',
       launchDate: 'January 4, 2028',
     };
@@ -45,8 +51,8 @@ describe('Launches API', () => {
       launchDate: 'January 4, 2028',
     };
     const launchDataWithoutDate = {
-      mission: 'Test Mission',
-      rocket: 'Test Rocket',
+      mission: 'Test Mission 2',
+      rocket: 'Test Rocket 2',
       target: 'Kepler-1652 b',
     };
 
@@ -82,11 +88,18 @@ describe('Launches API', () => {
     };
 
     test('It should respond with 200 success', async () => {
+      sinon.stub(launches, 'findOneAndUpdate');
+      const findOneStub = sinon.stub(launches, 'findOne');
+      const sortStub = sinon.stub().returns(100);
+      findOneStub.withArgs().returns({ sort: sortStub });
+      findOneStub.resolves(completeLaunchData);
+
       const response = await request(app)
         .post(`/${CURRENT_VERSION}/launches`)
         .send(completeLaunchData)
         .expect('Content-Type', /json/)
         .expect(201);
+      console.log(response.body);
       const requestDate = new Date(completeLaunchData.launchDate).valueOf();
       const responseDate = new Date(response.body.launchDate).valueOf();
       expect(responseDate).toBe(requestDate);
