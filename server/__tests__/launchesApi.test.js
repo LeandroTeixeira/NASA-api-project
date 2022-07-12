@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable no-undef */
 const request = require('supertest');
-const app = require('../src/app');
+const { app, CURRENT_VERSION } = require('../src/app');
 const { mongoConnect, mongoDisconnect } = require('../src/services/mongo');
 
 describe('Launches API', () => {
@@ -12,11 +12,20 @@ describe('Launches API', () => {
   afterAll(async () => {
     await mongoDisconnect();
   });
+  describe('Test GET /current', () => {
+    test('It should get the right version', async () => {
+      await request(app)
+        .get('/current')
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .expect({ version: CURRENT_VERSION });
+    });
+  });
 
   describe('Test GET /launches', () => {
     test('It should respond with 200 success', async () => {
       await request(app)
-        .get('/launches')
+        .get(`/${CURRENT_VERSION}/launches`)
         .expect('Content-Type', /json/)
         .expect(200);
     });
@@ -74,7 +83,7 @@ describe('Launches API', () => {
 
     test('It should respond with 200 success', async () => {
       const response = await request(app)
-        .post('/launches')
+        .post(`/${CURRENT_VERSION}/launches`)
         .send(completeLaunchData)
         .expect('Content-Type', /json/)
         .expect(201);
@@ -85,28 +94,28 @@ describe('Launches API', () => {
     });
     test('It should catch missing data', async () => {
       await request(app)
-        .post('/launches')
+        .post(`/${CURRENT_VERSION}/launches`)
         .send(launchDataWithoutMission)
         .expect('Content-Type', /json/)
         .expect(400)
         .expect({ error: 'Missing required data.' });
 
       await request(app)
-        .post('/launches')
+        .post(`/${CURRENT_VERSION}/launches`)
         .send(launchDataWithoutRocket)
         .expect('Content-Type', /json/)
         .expect(400)
         .expect({ error: 'Missing required data.' });
 
       await request(app)
-        .post('/launches')
+        .post(`/${CURRENT_VERSION}/launches`)
         .send(launchDataWithoutTarget)
         .expect('Content-Type', /json/)
         .expect(400)
         .expect({ error: 'Missing required data.' });
 
       await request(app)
-        .post('/launches')
+        .post(`/${CURRENT_VERSION}/launches`)
         .send(launchDataWithoutDate)
         .expect('Content-Type', /json/)
         .expect(400)
@@ -115,14 +124,14 @@ describe('Launches API', () => {
 
     test('It should catch invalid dates', async () => {
       await request(app)
-        .post('/launches')
+        .post(`/${CURRENT_VERSION}/launches`)
         .send(launchDataInvalidDate)
         .expect('Content-Type', /json/)
         .expect(400)
         .expect({ error: 'Invalid Date.' });
 
       await request(app)
-        .post('/launches')
+        .post(`/${CURRENT_VERSION}/launches`)
         .send(launchDataPastDate)
         .expect('Content-Type', /json/)
         .expect(400)
@@ -130,7 +139,7 @@ describe('Launches API', () => {
     });
     test('It should catch invalid planets', async () => {
       await request(app)
-        .post('/launches')
+        .post(`/${CURRENT_VERSION}/launches`)
         .send(launchDataInvalidPlanet)
         .expect('Content-Type', /json/)
         .expect(404)
@@ -151,7 +160,7 @@ describe('Launches API', () => {
     };
     test('It should be able to remove the default launch', async () => {
       const response = await request(app)
-        .delete('/launches/100')
+        .delete(`/${CURRENT_VERSION}/launches/100`)
         .expect('Content-Type', /json/)
         .expect(200);
       response.body.launchDate = new Date(response.body.launchDate).valueOf();
@@ -160,7 +169,7 @@ describe('Launches API', () => {
 
     test('It should fail to delete unexistent launches', async () => {
       const response = await request(app)
-        .delete('/launches/0')
+        .delete(`/${CURRENT_VERSION}/launches/0`)
         .expect('Content-Type', /json/)
         .expect(404);
       expect(response.body).toEqual({ error: 'Launch not found.' });
@@ -168,19 +177,11 @@ describe('Launches API', () => {
   });
 
   describe('Test GET /planets', () => {
-    beforeAll(async () => {
-      await mongoConnect();
-    });
-
-    afterAll(async () => {
-    // await mongoDisconnect();
-    });
     it('Test if all planets are found', async () => {
       const response = await request(app)
-        .get('/planets')
+        .get(`/${CURRENT_VERSION}/planets`)
         .expect('Content-Type', /json/)
         .expect(200);
-      // console.log(response);
       expect(response.body).toHaveLength(8);
     });
   });
